@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <title>custom_scroll</title>
+    <style>
+      .container {
+        width: 600px;
+        height: 500px;
+        border: solid 1px #ccc;
+        position: relative;
+        overflow: hidden;
+      }
+      .content {
+        width: 100%;
+        height: 2000px;
+        background: url(./images/bg.jpg) center center no-repeat;
+        background-size: cover;
+      }
+      .scroll-bar {
+        transition: all 0.5s ease-in-out;
+      }
+      .scroll-container {
+        transition: all 0.5s ease-in-out;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="test">1</div>
+    <div class="container">
+      <div id="content" class="content">
+
+      </div>
+    </div>
+    <script src="./src/scroll.js"></script>
+    <script>
+      // customScroll.init('content');
+      var content = document.getElementById('content');
+      var outter = content.parentNode;
+      var scrollContaner = document.createElement("div");
+      var scrollBar = document.createElement("div");
+
+      var sequence = 0;
+      var direct = 0; //1向下，-1向上
+      var maxratio = 2;
+      var dt = 100;
+      var ratio = 1;
+      var containerHeight = outter.clientHeight;
+      var barHeight = 0;
+      var barTop = 0;
+      var curTop = 0;
+      var animating = false;
+
+      scrollContaner.style.width = (outter.clientWidth+30) + 'px';
+      scrollContaner.style.overflowY = 'scroll';
+
+      scrollContaner.style.position = 'absolute';
+      scrollContaner.style.top = '0';
+      scrollContaner.className = 'scroll-container';
+      content.style.width = outter.clientWidth+'px';
+
+      scrollContaner.appendChild(content);
+      outter.appendChild(scrollContaner);
+
+      scrollBar.style.width = '5px';
+      scrollBar.style.background = '#999';
+      barHeight = outter.clientHeight * outter.clientHeight / content.clientHeight;
+      scrollBar.style.height = barHeight+'px';
+      scrollBar.style.position = 'absolute';
+      scrollBar.style.top = '0';
+      scrollBar.style.left = (outter.clientWidth - 5) + 'px';
+      scrollBar.className = 'scroll-bar'
+
+      outter.appendChild(scrollBar);
+
+      window.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var parent = e.target, count = 0;
+        var curScroll = null;
+        while (parent != document.documentElement && count < 100) {
+          parent = parent.parentNode;
+          count += 1;
+          if (parent == scrollContaner) {
+            curScroll = parent;
+            break;
+          }
+        }
+        if (curScroll) {
+          console.log(e.deltaY);
+          if (sequence) {
+            if (e.deltaY > 0) {
+              ratio = direct > 0 ? ratio + 0.2 : 1;
+              direct = 1;
+            } else if (e.deltaY < 0) {
+              ratio = direct < 0 ? ratio + 0.2 : 1;
+              direct = -1;
+            }
+          }          
+          sequence = 1;
+          setTimeout(function () {
+            sequence = 0;
+          }, 300);
+          ratio = ratio > maxratio ? maxratio : ratio;
+          var newTop;
+          if (e.deltaY > 0) {
+            curTop = curTop - dt*ratio;
+          } else {
+            curTop = curTop + dt*ratio;
+          }
+          curTop = curTop > 0 ? 0 : curTop;
+          curTop = curTop + content.clientHeight < outter.clientHeight ? outter.clientHeight - content.clientHeight : curTop;
+          newTop = curTop;
+          // if (!animating) {
+            // animating = true;
+            // setTimeout(function () {
+            //   animating = false;
+            // }, 500);
+            scrollContaner.style.top = newTop+'px';
+            barTop = (-newTop * outter.clientHeight / content.clientHeight);
+            scrollBar.style.top = barTop+'px';
+          // }
+        }
+      });
+
+      scrollContaner.addEventListener("mousedown", function (e) {
+        console.log(e);
+        e.preventDefault();
+        e.stopPropagation();
+      })
+
+    </script>
+  </body>
+</html>
